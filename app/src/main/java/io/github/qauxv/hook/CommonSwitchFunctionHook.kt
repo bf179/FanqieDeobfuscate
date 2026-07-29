@@ -25,7 +25,6 @@ package io.github.qauxv.hook
 import android.app.Activity
 import android.content.Context
 import android.view.View
-import cc.microblock.hook.pangu_spacing
 import io.github.qauxv.base.IEntityAgent
 import io.github.qauxv.base.ISwitchCellAgent
 import io.github.qauxv.base.IUiItemAgent
@@ -70,10 +69,10 @@ abstract class CommonSwitchFunctionHook(
     override val uiItemAgent by lazy { uiItemAgent() }
 
     private fun uiItemAgent() = object : IUiItemAgent {
-        override val titleProvider: (IEntityAgent) -> String = { _ -> pangu_spacing(name) }
+        override val titleProvider: (IEntityAgent) -> String = { _ -> name }
         override val summaryProvider: (IEntityAgent, Context) -> CharSequence? = { _, _ ->
             if (description is String)
-                pangu_spacing(description.toString())
+                description.toString()
             else description
         }
         override val valueState: StateFlow<String?>? = null

@@ -28,6 +28,7 @@ import android.view.View
 import io.github.qauxv.base.IEntityAgent
 import io.github.qauxv.base.ISwitchCellAgent
 import io.github.qauxv.base.IUiItemAgent
+import io.github.qauxv.hook.CommonSwitchFunctionHook
 import io.github.qauxv.util.dexkit.DexKitTarget
 import kotlinx.coroutines.flow.StateFlow
 
@@ -35,7 +36,7 @@ abstract class BaseSwitchFunctionDecorator(
         hookKey: String? = null,
         defaultEnabled: Boolean = false,
         dexDeobfIndexes: Array<DexKitTarget>? = null
-) : BaseDecorator(hookKey, defaultEnabled, dexDeobfIndexes) {
+) : CommonSwitchFunctionHook(hookKey, defaultEnabled, dexDeobfIndexes) {
 
     /**
      * Name of the function.
