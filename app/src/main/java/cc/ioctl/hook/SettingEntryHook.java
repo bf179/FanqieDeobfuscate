@@ -296,9 +296,9 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                 int resId = ctx.getResources().getIdentifier("qui_tuning", "drawable", ctx.getPackageName());
                 Object entryItem;
                 if (ctorSimpleItemProcessorArgc == 5) {
-                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "QAuxiliary", resId, null);
+                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId, null);
                 } else {
-                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "QAuxiliary", resId);
+                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId);
                 }
                 Class<?> thatFunction0 = setOnClickListener.getParameterTypes()[0];
                 Object theUnit = thatFunction0.getClassLoader().loadClass("kotlin.Unit").getField("INSTANCE").get(null);
@@ -386,7 +386,7 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                     item = (View) Reflex.newInstance(itemRef.getClass(), activity, Context.class);
                 }
                 item.setId(R.id.setting2Activity_settingEntryItem);
-                Reflex.invokeVirtual(item, "setLeftText", "QAuxiliary", CharSequence.class);
+                Reflex.invokeVirtual(item, "setLeftText", "小番茄解混淆", CharSequence.class);
                 Reflex.invokeVirtual(item, "setBgType", 2, int.class);
                 if (HookInstaller.getFuncInitException() != null) {
                     Reflex.invokeVirtual(item, "setRightText", "[严重错误]", CharSequence.class);
