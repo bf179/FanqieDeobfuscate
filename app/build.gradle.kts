@@ -178,8 +178,6 @@ android {
             //noinspection NotShrinkingResources
             isShrinkResources = false
             isMinifyEnabled = false
-            // 若未配置 release 签名密钥(如 fork CI), 回退到 debug 签名, 使 APK 可直接安装
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             proguardFiles("proguard-rules.pro")
             val ltoCacheFlags = listOf(
                 "-flto=thin",
