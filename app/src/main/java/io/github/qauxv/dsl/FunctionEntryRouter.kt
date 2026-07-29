@@ -50,7 +50,7 @@ object FunctionEntryRouter {
     )
 
     /**
-     * The full UI-DSL-function tree
+     * The full UI-DSL-function tree (simplified for fanqie version)
      */
     @JvmStatic
     val settingsUiItemDslTree: RootFragmentDescription by lazy {
@@ -61,7 +61,7 @@ object FunctionEntryRouter {
      * Skeletons of the DSL tree, used for any-cast lookup
      */
     private val settingsUiItemDslTreeSkeleton: RootFragmentDescription by lazy {
-        zwCreateBaseDslTree()
+        zwCreateSimplifiedDslTree()
     }
 
     @JvmStatic
@@ -160,8 +160,25 @@ object FunctionEntryRouter {
         return baseTree
     }
 
+    /**
+     * Create a simplified DSL tree for fanqie version. Only contains the necessary categories.
+     */
+    private fun zwCreateSimplifiedDslTree(): RootFragmentDescription {
+        val baseTree = RootFragmentDescription {
+            category("auxiliary-function", "辅助功能") {
+                fragment("auxiliary-chat-and-message", "聊天和消息") {
+                    category("auxiliary-message", "消息")
+                }
+            }
+            category("other-config", "其他") {
+                fragmentImpl("other-about", "关于", AboutFragment::class.java, false)
+            }
+        }
+        return baseTree
+    }
+
     private fun zwBuildUiItemDslTree(): RootFragmentDescription {
-        val baseTree: RootFragmentDescription = zwCreateBaseDslTree()
+        val baseTree: RootFragmentDescription = zwCreateSimplifiedDslTree()
         val lostAndFoundItems = mutableListOf<IUiItemAgentProvider>()
         val annotatedUiItemAgentEntries = queryAnnotatedUiItemAgentEntries()
         for (uiItemAgentEntry in annotatedUiItemAgentEntries) {

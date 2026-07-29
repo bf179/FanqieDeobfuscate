@@ -104,13 +104,24 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
         get() = keyConfigItemAgent
 
     private val keyConfigItemAgent: io.github.qauxv.base.IUiItemAgent = object : io.github.qauxv.base.IUiItemAgent {
-        override val titleProvider: (IEntityAgent) -> String = { "解混淆 Key (当前 ${"%.4f".format(currentKey)})" }
+        override val titleProvider: (IEntityAgent) -> String = { "小番茄解混淆" }
         override val summaryProvider: ((IEntityAgent, Context) -> CharSequence?) = { _, _ ->
-            "默认 ${"%.4f".format(DEFAULT_KEY)} (黄金比例), 范围 (0, 1.618]"
+            "长按图片消息进行小番茄(Gilbert 曲线)解混淆, 当前 Key: ${"%.4f".format(currentKey)}"
         }
         override val valueState: kotlinx.coroutines.flow.StateFlow<String?>? = null
         override val validator: ((io.github.qauxv.base.IUiItemAgent) -> Boolean) = { _ -> true }
-        override val switchProvider: io.github.qauxv.base.ISwitchCellAgent? = null
+        override val switchProvider: io.github.qauxv.base.ISwitchCellAgent? by lazy {
+            object : io.github.qauxv.base.ISwitchCellAgent {
+                override val isCheckable = true
+                override var isChecked: Boolean
+                    get() = isEnabled
+                    set(value) {
+                        if (value != isEnabled) {
+                            isEnabled = value
+                        }
+                    }
+            }
+        }
         override val onClickListener: ((IEntityAgent, Activity, View) -> Unit) = { _, activity, _ ->
             showKeyConfigDialog(activity)
         }
