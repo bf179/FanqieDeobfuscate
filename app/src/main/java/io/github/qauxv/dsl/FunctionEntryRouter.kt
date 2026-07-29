@@ -13,6 +13,8 @@ object FunctionEntryRouter {
             const val GROUP_CATEGORY: Array<String> = arrayOf("群聊")
             const val NOTIFICATION_CATEGORY: Array<String> = arrayOf("通知")
             const val FILE_CATEGORY: Array<String> = arrayOf("文件")
+            const val MISC_CATEGORY: Array<String> = arrayOf("其他")
+            const val DebugCategory: Array<String> = arrayOf("调试")
         }
         object Simplify {
             const val UI_PROFILE: Array<String> = arrayOf("界面-资料卡")
