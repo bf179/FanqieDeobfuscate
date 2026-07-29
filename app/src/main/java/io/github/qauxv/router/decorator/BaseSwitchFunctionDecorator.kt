@@ -41,14 +41,14 @@ abstract class BaseSwitchFunctionDecorator(
     /**
      * Name of the function.
      */
-    abstract val name: String
+    abstract override val name: String
 
     /**
      * Description of the function.
      */
-    open val description: CharSequence? = null
+    open override val description: CharSequence? = null
 
-    open val extraSearchKeywords: Array<String>? = null
+    open override val extraSearchKeywords: Array<String>? = null
 
     override val uiItemAgent: IUiItemAgent by lazy { uiItemAgent() }
 
