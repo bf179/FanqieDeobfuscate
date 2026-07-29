@@ -83,7 +83,6 @@ jobs:
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
           # TODO: 2025-08-20 find an alternative to removeUnusedEntriesAfterDays = 1 for Gradle 9.0+
           # echo 'buildCache { local { removeUnusedEntriesAfterDays = 1 } }' >> settings.gradle.kts
-          echo ${{ secrets.SIGN_KEYSTORE_BASE64 }} | base64 -d > keystore.jks
           ./gradlew :app:synthesizeDistReleaseApksCI :app:extractReleaseNativeDebugMetadata
           ccache -s
           echo "APK_FILE_ARM64=$(find app/build/outputs/ci -name '*arm64.apk')" >> $GITHUB_ENV
@@ -91,10 +90,6 @@ jobs:
           echo "APK_FILE_UNIVERSAL=$(find app/build/outputs/ci -name '*universal.apk')" >> $GITHUB_ENV
           echo "SYMBOL_FILE=app/build/intermediates/native_debug_metadata/release/extractReleaseNativeDebugMetadata/out" >> $GITHUB_ENV
         env:
-          KEYSTORE_PATH: "../keystore.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.SIGN_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
           QAUXV_OVERRIDE_CMAKE_VERSION: "3.31.0"
 
       - name: Show Artifacts SHA256
