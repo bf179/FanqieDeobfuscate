@@ -44,11 +44,7 @@ import cc.ioctl.util.LayoutHelper;
 import cc.ioctl.util.Reflex;
 import io.github.qauxv.BuildConfig;
 import io.github.qauxv.R;
-import io.github.qauxv.activity.SettingsUiFragmentHostActivity;
 import io.github.qauxv.base.annotation.FunctionHookEntry;
-import io.github.qauxv.core.HookInstaller;
-import io.github.qauxv.fragment.EulaFragment;
-import io.github.qauxv.fragment.FuncStatusDetailsFragment;
 import io.github.qauxv.hook.BasePersistBackgroundHook;
 import io.github.qauxv.lifecycle.Parasitics;
 import io.github.qauxv.step.Step;
@@ -454,17 +450,9 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
     };
 
     private void onSettingEntryClick(@NonNull Context context) {
-        if (HookInstaller.getFuncInitException() != null) {
-            SettingsUiFragmentHostActivity.startActivityForFragment(context, FuncStatusDetailsFragment.class,
-                    FuncStatusDetailsFragment.getBundleForLocation(FuncStatusDetailsFragment.TARGET_INIT_EXCEPTION));
-        } else if (LicenseStatus.hasUserAcceptEula()) {
-            context.startActivity(new Intent(context, SettingsUiFragmentHostActivity.class));
-        } else {
-            SettingsUiFragmentHostActivity.startActivityForFragment(context, EulaFragment.class, null);
-            if (context instanceof Activity) {
-                ((Activity) context).finish();
-            }
-        }
+        Intent intent = new Intent(context, cc.ioctl.fanqie.FanqieMainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 
     private void fixBackgroundType(@NonNull ViewGroup parent, @NonNull View itemView, int index) {

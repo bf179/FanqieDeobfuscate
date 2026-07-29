@@ -45,6 +45,16 @@ fun Method.hookBefore(owner: Any, callback: (XC_MethodHook.MethodHookParam) -> U
 
 // ---- Constructor hooks ----
 
+fun Class<*>.hookAfterAllConstructors(owner: Any, callback: (XC_MethodHook.MethodHookParam) -> Unit) {
+    for (ctor in this.declaredConstructors) {
+        XposedBridge.hookMethod(ctor, object : XC_MethodHook(50) {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                try { callback(param) } catch (t: Throwable) { io.github.qauxv.util.Log.e(t) }
+            }
+        })
+    }
+}
+
 inline fun <reified T> hookAfterAllConstructors(owner: Any, crossinline callback: (XC_MethodHook.MethodHookParam) -> Unit) {
     val clazz = T::class.java
     for (ctor in clazz.declaredConstructors) {
