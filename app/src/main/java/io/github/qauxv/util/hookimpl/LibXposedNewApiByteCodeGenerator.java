@@ -149,16 +149,16 @@ public class LibXposedNewApiByteCodeGenerator {
                     "V", Modifier.PUBLIC | ACC_CONSTRUCTOR, null, null, ctorMethodImpl);
             methods.add(ctorMethod);
         }
-        String typeInvocationParamWrapper = "Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;";
-        String typeLsp100HookAgent = "Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;";
+        String typeInvocationParamWrapper = "Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;";
+        String typeLsp100HookAgent = "Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;";
         {
-            //.method public static before(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;)Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
+            //.method public static before(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;)Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
             //    .registers 2
             //    .param p0, "callback"  # Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;
             //    .annotation runtime Lio/github/libxposed/api/annotations/BeforeInvocation;
             //    .end annotation
             //    const/32 v0, 0x????????L
-            //    invoke-static {p0, v0}, Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleBeforeHookedMethod(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;I)Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
+            //    invoke-static {p0, v0}, Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleBeforeHookedMethod(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;I)Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
             //    move-result-object v0
             //    return-object v0
             //.end method
@@ -175,7 +175,7 @@ public class LibXposedNewApiByteCodeGenerator {
             ArrayList<Instruction> insBefore = new ArrayList<>();
             // const/32 v0, 0x????????L
             insBefore.add(new ImmutableInstruction31i(Opcode.CONST, 0, tagValue));
-            // invoke-static {p0, v0}, Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleBeforeHookedMethod(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;I)Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
+            // invoke-static {p0, v0}, Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleBeforeHookedMethod(Lio/github/libxposed/api/XposedInterface$BeforeHookCallback;I)Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
             insBefore.add(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 1, 0, 0, 0, 0,
                     new ImmutableMethodReference(typeLsp100HookAgent, "handleBeforeHookedMethod",
                             List.of(typeBeforeHookCallback, "I"), typeInvocationParamWrapper)));
@@ -189,14 +189,14 @@ public class LibXposedNewApiByteCodeGenerator {
             ), typeInvocationParamWrapper, Modifier.PUBLIC | Modifier.STATIC, annotations, null, beforeMethodImpl);
             methods.add(beforeMethod);
         }
-        //.method public static after(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;)V
+        //.method public static after(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;)V
         //    .registers 3
         //    .param p0, "callback"  # Lio/github/libxposed/api/XposedInterface$AfterHookCallback;
-        //    .param p1, "param"  # Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
+        //    .param p1, "param"  # Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;
         //    .annotation runtime Lio/github/libxposed/api/annotations/AfterInvocation;
         //    .end annotation
         //    const/32 v0, 0x????
-        //    invoke-static {p0, p1, v0}, Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleAfterHookedMethod(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;I)V
+        //    invoke-static {p0, p1, v0}, Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleAfterHookedMethod(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;I)V
         //    return-void
         //.end method
         {
@@ -213,7 +213,7 @@ public class LibXposedNewApiByteCodeGenerator {
             ArrayList<Instruction> insAfter = new ArrayList<>();
             // const/32 v0, 0x????
             insAfter.add(new ImmutableInstruction31i(Opcode.CONST, 0, tagValue));
-            // invoke-static {p0, p1, v0}, Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleAfterHookedMethod(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;I)V
+            // invoke-static {p0, p1, v0}, Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$Lsp100HookAgent;->handleAfterHookedMethod(Lio/github/libxposed/api/XposedInterface$AfterHookCallback;Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/Lsp100HookWrapper$InvocationParamWrapper;I)V
             insAfter.add(new ImmutableInstruction35c(Opcode.INVOKE_STATIC, 3, 1, 2, 0, 0, 0,
                     new ImmutableMethodReference(typeLsp100HookAgent, "handleAfterHookedMethod",
                             List.of(typeAfterHookCallback, typeInvocationParamWrapper, "I"), "V")));
@@ -226,7 +226,7 @@ public class LibXposedNewApiByteCodeGenerator {
             ), "V", Modifier.PUBLIC | Modifier.STATIC, annotations, null, afterMethodImpl);
             methods.add(afterMethod);
         }
-        //.class public Lio/github/qauxv/loader/sbl/lsp100/dyn/Lsp100CallbackProxy$P0000000050;
+        //.class public Lio/github/qauxv/fanqiedebf/loader/sbl/lsp100/dyn/Lsp100CallbackProxy$P0000000050;
         //.super Ljava/lang/Object;
         //.implements Lio/github/libxposed/api/XposedInterface$Hooker;
         //.annotation runtime Lio/github/libxposed/api/annotations/XposedHooker;

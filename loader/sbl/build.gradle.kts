@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.qauxv.loader.sbl"
+    namespace = "io.github.qauxv.fanqiedebf.loader.sbl"
 
     compileSdk {
         // "36.1" -> major=36, minor=1
