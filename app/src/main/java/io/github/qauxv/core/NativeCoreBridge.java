@@ -96,7 +96,7 @@ public class NativeCoreBridge {
             cacheDir.mkdir();
         }
         MMKV.initialize(ctx, mmkvDir.getAbsolutePath(), s -> {
-            // nop, mmkv is attached with libqauxv-core0.so
+            // nop, mmkv is attached with libfanqie-core0.so
         });
         MMKV.mmkvWithID("global_config", MMKV.MULTI_PROCESS_MODE);
         MMKV.mmkvWithID("global_cache", MMKV.MULTI_PROCESS_MODE);

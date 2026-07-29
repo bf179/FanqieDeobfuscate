@@ -56,7 +56,7 @@ target_compile_options(dex_builder_static PRIVATE "-Wno-c++2b-extensions")
 
 target_compile_definitions(fmt-header-only INTERFACE FMT_STATIC_THOUSANDS_SEPARATOR=1)
 
-add_library(qauxv-core0 SHARED
+add_library(fanqie-core0 SHARED
         misc/exec.c
         misc/v2sign.cc
         misc/md5.cpp
@@ -101,19 +101,19 @@ add_library(qauxv-core0 SHARED
 add_library(qauxv-version STATIC misc/version.c)
 target_compile_definitions(qauxv-version PRIVATE QAUXV_VERSION=\"${QAUXV_VERSION}\")
 
-set_target_properties(qauxv-core0 PROPERTIES
+set_target_properties(fanqie-core0 PROPERTIES
         CXX_EXTENSIONS OFF
         POSITION_INDEPENDENT_CODE ON
 )
 
-target_include_directories(qauxv-core0 PRIVATE ../../../../libs/linux-syscall-support)
-target_include_directories(qauxv-core0 PRIVATE ../../../../libs/LSPlant/lsplant/src/main/jni)
-target_include_directories(qauxv-core0 PRIVATE ../../../../libs/mmkv/MMKV/Core)
-target_include_directories(qauxv-core0 PRIVATE .)
+target_include_directories(fanqie-core0 PRIVATE ../../../../libs/linux-syscall-support)
+target_include_directories(fanqie-core0 PRIVATE ../../../../libs/LSPlant/lsplant/src/main/jni)
+target_include_directories(fanqie-core0 PRIVATE ../../../../libs/mmkv/MMKV/Core)
+target_include_directories(fanqie-core0 PRIVATE .)
 
-target_link_options(qauxv-core0 PRIVATE "-Wl,-e,__libqauxv_main")
+target_link_options(fanqie-core0 PRIVATE "-Wl,-e,__libqauxv_main")
 
-target_link_libraries(qauxv-core0 qauxv-version dobby mmkv dexkit_static unwindstack base silk
+target_link_libraries(fanqie-core0 qauxv-version dobby mmkv dexkit_static unwindstack base silk
         c dl fmt-header-only z lzma lsplant_static ${ANDROID_LIBS}
 )
 

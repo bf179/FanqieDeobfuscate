@@ -145,7 +145,7 @@ android {
                 // some modules uses features that are REMOVED or deprecated in C++20
                 cppFlags(*flags)
                 cFlags("-std=c18", *flags)
-                targets += "qauxv-core0"
+                targets += "fanqie-core0"
             }
         }
 
@@ -253,7 +253,7 @@ android {
     androidResources {
         additionalParameters += arrayOf(
             "--allow-reserved-package-id",
-            "--package-id", "0x39"
+            "--package-id", "0x3a"
         )
     }
     packaging {
@@ -505,7 +505,7 @@ val synthesizeDistReleaseApksCI by tasks.registering {
         ZFile.openReadOnly(inputApk).use { srcApk ->
             // check whether all required abis are in the apk
             requiredAbiList.forEach { abi ->
-                val path = "lib/$abi/libqauxv-core0.so"
+                val path = "lib/$abi/libfanqie-core0.so"
                 require(srcApk.get(path) != null) { "input apk should contain $path, but not found" }
             }
             outputAbiVariants.forEach { (variant, abis) ->

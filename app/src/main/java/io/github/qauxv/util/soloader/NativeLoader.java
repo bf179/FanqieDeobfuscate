@@ -66,8 +66,8 @@ public class NativeLoader {
     // The two native libraries are loaded into the same process, but they are in different linker namespaces.
     // For a user running an arm64 QQ on an arm64 device, the primary native library is arm64, and the secondary native library is arm64.
     // There will be only one native library in the process, and it is the primary native library, but it can be considered "primary+secondary" in logic.
-    // primary native library: libqauxv-core0.so
-    // secondary native library: libqauxv-core1.so (not the real name, just for illustration, the real name is also libqauxv-core0.so)
+    // primary native library: libfanqie-core0.so
+    // secondary native library: libfanqie-core1.so (not the real name, just for illustration, the real name is also libfanqie-core0.so)
     // For a typical case in host process, the sequence of loading is:
     // stage 1: primary load, no context available, e.g. postSpecialize: -> load "primary" + "primary" pre-init, register native methods
     // stage 2: primary pre-init, no context available, this happens right after primary load: -> init Dobby, init LSPlant
@@ -300,7 +300,7 @@ public class NativeLoader {
     public static Set<Integer> getModuleSupportedIsas() {
         if (sModuleSupportedIsas == null) {
             synchronized (NativeLoader.class) {
-                final String soname = "libqauxv-core0.so";
+                final String soname = "libfanqie-core0.so";
                 if (sModuleSupportedIsas == null) {
                     String path = StartupInfo.getModulePath();
                     // open a zip file
@@ -331,7 +331,7 @@ public class NativeLoader {
             loadPrimaryNativeLibraryInHost(dataDir, hostAppInfo);
         } else {
             // in my own app_process, it's so easy
-            System.loadLibrary("qauxv-core0");
+            System.loadLibrary("fanqie-core0");
             sPrimaryNativeLibraryLoaded = true;
             try {
                 Class.forName("io.github.qauxv.isolated.soloader.LoadLibraryInvoker", false, NativeLoader.class.getClassLoader())
@@ -370,9 +370,9 @@ public class NativeLoader {
                     + ", supported ISAs: " + isaSetToString(supportedIsas));
         }
         String modulePath = StartupInfo.getModulePath();
-        String zipEntry = "lib/" + getNativeLibraryDirName(appIsa) + "/libqauxv-core0.so";
+        String zipEntry = "lib/" + getNativeLibraryDirName(appIsa) + "/libfanqie-core0.so";
         ClassLoader classLoader = getIsolatedSecondaryNativeLibraryNativeLoader(context);
-        // the native loader will then patch the "libqauxv-core0.so" to "libqauxv-core1.so" before loading
+        // the native loader will then patch the "libfanqie-core0.so" to "libfanqie-core1.so" before loading
         sSecondaryNativeLibraryHandle = nativeLoadSecondaryNativeLibrary(modulePath, zipEntry, classLoader, appIsa);
         if (sSecondaryNativeLibraryHandle == 0) {
             throw new AssertionError("nativeLoadSecondaryNativeLibrary returned 0");
@@ -442,7 +442,7 @@ public class NativeLoader {
             throw IoUtils.unsafeThrowForIteCause(e);
         }
         String apkPath = StartupInfo.getModulePath();
-        String soname = "libqauxv-core0.so";
+        String soname = "libfanqie-core0.so";
         if (!sPrimaryNativeLibraryLoaded) {
             // case 1: direct load without extracting, since the native library is expected to be 4K aligned without compression
             try {
@@ -516,7 +516,7 @@ public class NativeLoader {
      * Extract or update native library into "qa_dyn_lib" dir
      *
      * @param filesDir directory to store the extracted native library, get from {@link Context#getFilesDir()}
-     * @param soname   the name of the native library, e.g. "libqauxv-core0.so"
+     * @param soname   the name of the native library, e.g. "libfanqie-core0.so"
      * @param abi      the ABI of the native library, e.g. "arm64-v8a"
      */
     private static File extractNativeLibrary(@NonNull File filesDir, String soname, String abi) {

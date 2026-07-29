@@ -491,7 +491,7 @@ Java_io_github_qauxv_util_soloader_NativeLoader_nativeGetPrimaryNativeLibraryHan
     static std::string errorMsg;
     static void* handle = nullptr;
     static std::once_flag flag;
-    const char* soname = "libqauxv-core0.so";
+    const char* soname = "libfanqie-core0.so";
     std::call_once(flag, [&]() {
         handle = dlopen(soname, RTLD_NOW | RTLD_NOLOAD);
         if (handle == nullptr) {
