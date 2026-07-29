@@ -29,7 +29,7 @@ object MenuBuilderHook : BasePersistBackgroundHook() {
                 it.isAbstract && it.returnType == MutableList::class.java && it.parameterTypes.isEmpty()
             }.name
             val hookedClasses = mutableSetOf<Class<*>>()
-            baseContentComponentClass.hookAfterAllConstructors {
+            baseContentComponentClass.hookAfterAllConstructors(this) {
                 val class_ContentComponent = it.thisObject.javaClass
                 if (class_ContentComponent in hookedClasses) return@hookAfterAllConstructors
                 hookedClasses.add(class_ContentComponent)
