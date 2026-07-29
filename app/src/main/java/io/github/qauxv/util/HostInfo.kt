@@ -35,7 +35,7 @@ const val PACKAGE_NAME_QQ_INTERNATIONAL = "com.tencent.mobileqqi"
 const val PACKAGE_NAME_QQ_LITE = "com.tencent.qqlite"
 const val PACKAGE_NAME_QQ_HD = "com.tencent.minihd.qq"
 const val PACKAGE_NAME_TIM = "com.tencent.tim"
-const val PACKAGE_NAME_SELF = "io.github.qauxv.fanqiedebf"
+const val PACKAGE_NAME_SELF = "cc.ioctl.fanqie"
 
 lateinit var hostInfo: HostInfoImpl
 

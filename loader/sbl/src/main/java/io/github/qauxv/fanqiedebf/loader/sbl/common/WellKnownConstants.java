@@ -32,7 +32,7 @@ public class WellKnownConstants {
     public static final String PACKAGE_NAME_QQ_LITE = "com.tencent.qqlite";
     public static final String PACKAGE_NAME_QQ_HD = "com.tencent.minihd.qq";
     public static final String PACKAGE_NAME_TIM = "com.tencent.tim";
-    public static final String PACKAGE_NAME_SELF = "io.github.qauxv.fanqiedebf";
+    public static final String PACKAGE_NAME_SELF = "cc.ioctl.fanqie";
     public static final String PACKAGE_NAME_XPOSED_INSTALLER = "de.robv.android.xposed.installer";
 
 }

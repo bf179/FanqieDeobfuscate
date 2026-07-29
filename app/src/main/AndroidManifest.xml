@@ -45,34 +45,11 @@
         <activity
             android:exported="true"
             android:icon="@drawable/icon"
-            android:name="io.github.qauxv.activity.ConfigV2Activity"
+            android:name="cc.ioctl.fanqie.FanqieMainActivity"
             android:theme="@style/Theme.MaiTungTMDesign.DayNight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@drawable/icon"
-            android:name="me.ketal.ui.activity.QFileShareToIpadActivity"
-            android:theme="@style/NoDisplay">
-            <intent-filter android:label="@string/send_to_ipad">
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data android:mimeType="image/*" />
-                <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
-                <data android:mimeType="application/*" />
-                <data android:mimeType="text/*" />
-            </intent-filter>
-            <intent-filter android:label="@string/send_to_ipad">
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 
@@ -81,18 +58,13 @@
             android:icon="@drawable/icon"
             android:label="@string/app_name"
             android:name=".activity.ConfigV2ActivityAlias"
-            android:targetActivity="io.github.qauxv.activity.ConfigV2Activity"
+            android:targetActivity="cc.ioctl.fanqie.FanqieMainActivity"
             android:theme="@style/Theme.MaiTungTMDesign.DayNight">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
-
-        <activity
-            android:exported="false"
-            android:name=".activity.SettingsUiFragmentHostActivity"
-            android:theme="@style/AppTheme.Def" />
 
         <activity
             android:exported="false"
