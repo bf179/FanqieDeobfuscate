@@ -22,7 +22,7 @@ import java.io.IOException
 object FanqieDeobfuscateUtils {
 
     /** 默认 Key: 黄金比例共轭 (sqrt5 - 1)/2 ≈ 0.618 */
-    const val DEFAULT_KEY: Double = (Math.sqrt(5.0) - 1.0) / 2.0
+    val DEFAULT_KEY: Double = (Math.sqrt(5.0) - 1.0) / 2.0
 
     /** 限制约 800 万像素以避免内存溢出 */
     const val MAX_PIXELS = 8_000_000

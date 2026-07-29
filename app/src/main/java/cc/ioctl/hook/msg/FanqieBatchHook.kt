@@ -81,7 +81,7 @@ object FanqieBatchHook : CommonSwitchFunctionHook(
 
         // Hook 多选栏创建: MultiSelectBarVB.onCreateView
         Initiator.loadClass("com.tencent.mobileqq.aio.input.multiselect.MultiSelectBarVB")
-            .method("onCreateView")
+            .method("onCreateView")!!
             .hookAfter(this) {
                 val rootView = findViewNt(it.method.declaringClass, it.thisObject) ?: return@hookAfter
                 val context = rootView.context as AppActivity
@@ -115,7 +115,7 @@ object FanqieBatchHook : CommonSwitchFunctionHook(
             DexKit.requireClassFromCache(MultiSelectBarVM).method("handleIntent")
         } else {
             Initiator.loadClass("com.tencent.mobileqq.aio.input.multiselect.MultiSelectBarVM").method("handleIntent")
-        }.hookBefore(this) {
+        }!!.hookBefore(this) {
             val intent = it.args[0]
             val intentClass = DexKit.requireClassFromCache(MultiSelectToBottomIntent)
             if (intent.javaClass.isAssignableFrom(intentClass)) {
