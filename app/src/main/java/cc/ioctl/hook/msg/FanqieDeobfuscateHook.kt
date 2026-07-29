@@ -76,22 +76,16 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
 ), OnMenuBuilder {
 
     override val name = "小番茄解混淆"
-    override val description = "长按图片消息点击\"小番茄解混淆\", 对图片进行小番茄(Gilbert 曲线)解混淆并保存到相册。点击\"解混淆 Key\" 可自定义偏移系数。"
+    override val description = "长按图片消息进行小番茄(Gilbert 曲线)解混淆并保存到相册。多选图片后可在多选栏点击批量解混淆。"
     override val uiItemLocation = FunctionEntryRouter.Locations.Auxiliary.MESSAGE_CATEGORY
     override val isAvailable = QAppUtils.isQQnt()
-
-    /** 与网页版工具一致, 限制约 800 万像素以避免内存溢出。 */
-    private const val MAX_PIXELS = 8_000_000
-
-    /** 黄金比例共轭 (sqrt(5)-1)/2, 用作沿曲线的默认偏移系数。 */
-    val DEFAULT_KEY: Double = (Math.sqrt(5.0) - 1.0) / 2.0
 
     private val keyConfig = ConfigData<Double>("fanqie_deobf_key")
 
     val currentKey: Double
         get() {
             val v: Double? = keyConfig.getValue()
-            return if (v == null || v <= 0.0 || v > 1.618) DEFAULT_KEY else v
+            return if (v == null || v <= 0.0 || v > 1.618) FanqieDeobfuscateUtils.DEFAULT_KEY else v
         }
 
     override fun initOnce(): Boolean = true
@@ -181,7 +175,7 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
         }
         AlertDialog.Builder(ctx)
             .setTitle("设置解混淆 Key")
-            .setMessage("范围 (0, 1.618], 默认 ${"%.4f".format(DEFAULT_KEY)} (黄金比例共轭)")
+            .setMessage("范围 (0, 1.618], 默认 ${"%.4f".format(FanqieDeobfuscateUtils.DEFAULT_KEY)} (黄金比例共轭)")
             .setView(layout)
             .setPositiveButton("保存") { _, _ ->
                 val raw = edit.text.toString().trim()
@@ -195,7 +189,7 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
             }
             .setNeutralButton("恢复默认") { _, _ ->
                 keyConfig.remove()
-                Toasts.success(ctx, "已恢复默认 ${"%.4f".format(DEFAULT_KEY)}")
+                Toasts.success(ctx, "已恢复默认 ${"%.4f".format(FanqieDeobfuscateUtils.DEFAULT_KEY)}")
             }
             .setNegativeButton("取消", null)
             .show()
@@ -204,105 +198,8 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
     // ---------------- 小番茄 (Gilbert 曲线 + 自定义 key 偏移) 解混淆 ----------------
 
     private fun deobfuscate(file: File): Bitmap {
-        val options = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
-        val src = BitmapFactory.decodeFile(file.absolutePath, options)
-            ?: throw IOException("无法解码图片")
-        try {
-            val w = src.width
-            val h = src.height
-            val n = w * h
-            if (n <= 0) throw IOException("图片尺寸异常")
-            if (n > MAX_PIXELS) throw IOException("图片过大 ($w×$h), 请使用更小尺寸的图片")
-            val pixels = IntArray(n)
-            src.getPixels(pixels, 0, w, 0, 0, w, h)
-            val curve = gilbertCurve(w, h) // 每个元素为像素索引 x + y * w
-            val key = currentKey
-            val offset = Math.round(key * n).toInt()
-            val out = IntArray(n)
-            for (i in 0 until n) {
-                // 解混淆: dst[curve[i]] = src[curve[(i + offset) % n]]
-                out[curve[i]] = pixels[curve[(i + offset) % n]]
-            }
-            val result = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            result.setPixels(out, 0, w, 0, 0, w, h)
-            return result
-        } finally {
-            src.recycle()
-        }
+        return FanqieDeobfuscateUtils.deobfuscate(file, currentKey)
     }
-
-    /** 生成 Gilbert(广义 Hilbert)空间填充曲线, 返回每个位置对应的像素索引 (x + y * w)。 */
-    private fun gilbertCurve(w: Int, h: Int): IntArray {
-        val curve = IntArray(w * h)
-        val idx = intArrayOf(0)
-        if (w >= h) {
-            gen(0, 0, w, 0, 0, h, w, curve, idx)
-        } else {
-            gen(0, 0, 0, h, w, 0, w, curve, idx)
-        }
-        return curve
-    }
-
-    private fun gen(
-        x: Int, y: Int, ax: Int, ay: Int, bx: Int, by: Int,
-        imgW: Int, curve: IntArray, idx: IntArray
-    ) {
-        val w = Math.abs(ax + ay)
-        val h = Math.abs(bx + by)
-        val dax = sgn(ax)
-        val day = sgn(ay)
-        val dbx = sgn(bx)
-        val dby = sgn(by)
-        if (h == 1) {
-            var xx = x
-            var yy = y
-            repeat(w) {
-                curve[idx[0]++] = xx + yy * imgW
-                xx += dax
-                yy += day
-            }
-            return
-        }
-        if (w == 1) {
-            var xx = x
-            var yy = y
-            repeat(h) {
-                curve[idx[0]++] = xx + yy * imgW
-                xx += dbx
-                yy += dby
-            }
-            return
-        }
-        var ax2 = Math.floorDiv(ax, 2)
-        var ay2 = Math.floorDiv(ay, 2)
-        var bx2 = Math.floorDiv(bx, 2)
-        var by2 = Math.floorDiv(by, 2)
-        val w2 = Math.abs(ax2 + ay2)
-        val h2 = Math.abs(bx2 + by2)
-        if (2 * w > 3 * h) {
-            if (w2 % 2 != 0 && w > 2) {
-                ax2 += dax
-                ay2 += day
-            }
-            gen(x, y, ax2, ay2, bx, by, imgW, curve, idx)
-            gen(x + ax2, y + ay2, ax - ax2, ay - ay2, bx, by, imgW, curve, idx)
-        } else {
-            if (h2 % 2 != 0 && h > 2) {
-                bx2 += dbx
-                by2 += dby
-            }
-            gen(x, y, bx2, by2, ax2, ay2, imgW, curve, idx)
-            gen(x + bx2, y + by2, ax, ay, bx - bx2, by - by2, imgW, curve, idx)
-            gen(
-                x + (ax - dax) + (bx2 - dbx),
-                y + (ay - day) + (by2 - dby),
-                -bx2, -by2, -(ax - ax2), -(ay - ay2),
-                imgW, curve, idx
-            )
-        }
-    }
-
-    private fun sgn(v: Int) = if (v > 0) 1 else if (v < 0) -1 else 0
 
     // ---------------- 结果展示与保存 ----------------
 

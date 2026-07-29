@@ -46,7 +46,8 @@ object FunctionEntryRouter {
      * 其它官方模块的 UI 项不显示。
      */
     private val whitelistedUiItemProviders: Set<String> = setOf(
-        "cc.ioctl.hook.msg.FanqieDeobfuscateHook"
+        "cc.ioctl.hook.msg.FanqieDeobfuscateHook",
+        "cc.ioctl.hook.msg.FanqieBatchHook"
     )
 
     /**

@@ -32,6 +32,7 @@
     <item type="id" name="jefsRulesCancelButton" />
     <item type="id" name="jefsRulesResetButton" />
     <item type="id" name="ketalRecallImageView" />
+    <item type="id" name="fanqieBatchDeobfView" />
     <item type="id" name="btn_apply" />
     <item type="id" name="btn_cancel" />
     <item type="id" name="btn_disable" />

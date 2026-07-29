@@ -67,7 +67,7 @@ develocity {
     }
 }
 
-rootProject.name = "QAuxiliary"
+rootProject.name = "FanqieDeobfuscate"
 include(
     ":app",
     ":loader:startup",

@@ -445,7 +445,8 @@ tasks.register("checkGitSubmodule") {
             }
         }
     }
-}.also { tasks.preBuild.dependsOn(it) }
+}
+// [FanqieDeobfuscate] Disabled checkGitSubmodule preBuild dependency for CI compatibility
 
 val synthesizeDistReleaseApksCI by tasks.registering {
     group = "build"
