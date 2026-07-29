@@ -1,11 +1,11 @@
-package io.github.qauxv.step
+package io.github.qauxv.step;
 
 /**
- * [FanqieDeobfuscate] Minimal stub for Step interface.
+ * Minimal stub for Step interface.
  */
-interface Step {
-    fun step(): Boolean
-    fun isDone(): Boolean
-    fun getPriority(): Int
-    fun getDescription(): String
+public interface Step {
+    boolean step();
+    boolean isDone();
+    int getPriority();
+    String getDescription();
 }

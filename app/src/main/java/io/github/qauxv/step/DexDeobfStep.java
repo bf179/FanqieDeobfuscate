@@ -1,14 +1,13 @@
 package io.github.qauxv.step;
 
-import io.github.qauxv.base.annotation.DexDeobfs;
-
 /**
- * [FanqieDeobfuscate] Minimal stub for DexDeobfStep.
+ * Minimal stub for DexDeobfStep.
+ * Accepts any target type to satisfy both DexDeobfs and DexKitTarget.
  */
 public class DexDeobfStep implements Step {
     private boolean done = false;
 
-    public DexDeobfStep(DexDeobfs dexDeobfs) {
+    public DexDeobfStep(Object target) {
     }
 
     @Override
