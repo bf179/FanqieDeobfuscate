@@ -282,7 +282,7 @@ EXPORT extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (appInterface == nullptr) {
         env->ExceptionClear();
     }
-#if defined(NDEBUG) || defined(TEST_SIGNATURE)
+#if (defined(NDEBUG) || defined(TEST_SIGNATURE)) && !defined(QAUXV_SKIP_SIGNATURE_CHECK)
     if (!::teble::v2sign::checkSignature(env, appInterface != nullptr)) {
         return JNI_ERR;
     }

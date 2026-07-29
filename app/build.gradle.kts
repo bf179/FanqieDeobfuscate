@@ -195,8 +195,9 @@ android {
             if (signatureDigest != null) {
                 releaseFlags += "-DMODULE_SIGNATURE=$signatureDigest"
             } else {
-                // fork/CI 无签名密钥时传入占位值, 避免 release 构建的 Native 编译失败
+                // fork/CI 无签名密钥时跳过 Native 签名校验, 使 release 构建可正常加载
                 releaseFlags += "-DMODULE_SIGNATURE=00000000000000000000000000000000"
+                releaseFlags += "-DQAUXV_SKIP_SIGNATURE_CHECK"
             }
             externalNativeBuild.cmake {
                 arguments += "-DQAUXV_VERSION=${defaultConfig.versionName}"
