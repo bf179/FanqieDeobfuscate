@@ -67,12 +67,18 @@ public class StartupAgent {
         if (io.github.qauxv.R.string.res_inject_success >>> 24 == 0x7f) {
             throw new AssertionError("package id must NOT be 0x7f, reject loading...");
         }
-        if ("true".equals(System.getProperty(StartupAgent.class.getName()))) {
-            android.util.Log.e("QAuxv", "Error: QAuxiliary reloaded??");
+        // Use a unique key per module (APPLICATION_ID) to avoid conflicts when
+        // both the official QAuxiliary and this fork are loaded into the same process.
+        // The class name "io.github.qauxv.poststartup.StartupAgent" is identical in both
+        // modules, so System.getProperty(StartupAgent.class.getName()) would cause the
+        // second module's startup to be silently skipped.
+        String startupPropertyKey = StartupAgent.class.getName() + "." + BuildConfig.APPLICATION_ID;
+        if ("true".equals(System.getProperty(startupPropertyKey))) {
+            android.util.Log.e("QAuxv", "Error: QAuxiliary reloaded?? (" + BuildConfig.APPLICATION_ID + ")");
             // I don't know... What happened?
             return;
         }
-        System.setProperty(StartupAgent.class.getName(), "true");
+        System.setProperty(startupPropertyKey, "true");
         StartupInfo.setModulePath(modulePath);
         StartupInfo.setLoaderService(loaderService);
         StartupInfo.setHookBridge(hookBridge);

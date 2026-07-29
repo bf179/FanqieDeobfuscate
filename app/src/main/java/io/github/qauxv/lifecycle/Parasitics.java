@@ -82,6 +82,10 @@ public class Parasitics {
     }
 
     private static boolean __stub_hooked = false;
+
+    // Unique tag per module to distinguish ProxyHandlerCallback instances from different modules
+    // that share the same class name when loaded into the same host process.
+    private static final String MODULE_TAG = io.github.qauxv.BuildConfig.APPLICATION_ID;
     private static long sResInjectBeginTime = 0;
     private static long sResInjectEndTime = 0;
     private static long sActStubHookBeginTime = 0;
@@ -239,7 +243,14 @@ public class Parasitics {
             Field field_mCallback = Handler.class.getDeclaredField("mCallback");
             field_mCallback.setAccessible(true);
             Handler.Callback current = (Handler.Callback) field_mCallback.get(oriHandler);
-            if (current == null || !current.getClass().getName().equals(ProxyHandlerCallback.class.getName())) {
+            // Check if our module's ProxyHandlerCallback is already installed.
+            // Use MODULE_TAG instead of class name, because two modules (official QAuxiliary
+            // and this fork) have the same ProxyHandlerCallback class name but different tags.
+            boolean alreadyInstalled = false;
+            if (current instanceof ProxyHandlerCallback) {
+                alreadyInstalled = MODULE_TAG.equals(((ProxyHandlerCallback) current).mModuleTag);
+            }
+            if (!alreadyInstalled) {
                 field_mCallback.set(oriHandler, new ProxyHandlerCallback(current));
             }
             //End of Handler
@@ -364,6 +375,10 @@ public class Parasitics {
     }
 
     public static class ProxyHandlerCallback implements Handler.Callback {
+
+        // Unique tag to identify which module this callback belongs to,
+        // allowing multiple modules to coexist with their own ProxyHandlerCallback instances.
+        public final String mModuleTag = MODULE_TAG;
 
         private final Handler.Callback mNextCallbackHook;
 
