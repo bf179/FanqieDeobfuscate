@@ -81,15 +81,15 @@ jobs:
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           sed -i 's/org.gradle.configuration-cache=true//g' gradle.properties
           echo 'qauxv.override.ninja.path=/usr/bin/ninja' >> local.properties
-          ./gradlew :app:packageDebug
+          ./gradlew :app:packageRelease
           ccache -s
         env:
           QAUXV_OVERRIDE_CMAKE_VERSION: "3.31.0"
 
-      - name: Upload Debug APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v5
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
           retention-days: 14
