@@ -155,24 +155,39 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
 
     @Override
     public boolean initOnce() throws Exception {
-        injectSettingEntryForMainSettingConfigProvider();
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] initOnce() START");
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] entry name to inject: 小番茄解混淆");
+        try {
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] calling injectSettingEntryForMainSettingConfigProvider...");
+            injectSettingEntryForMainSettingConfigProvider();
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] injectSettingEntryForMainSettingConfigProvider SUCCESS");
+        } catch (Throwable t) {
+            android.util.Log.e("FanqieDebug", "[SettingEntryHook] injectSettingEntryForMainSettingConfigProvider FAILED: " + t, t);
+            throw t;
+        }
         // below 8.9.70
         Class<?> kQQSettingSettingActivity = Initiator._QQSettingSettingActivity();
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] kQQSettingSettingActivity=" + kQQSettingSettingActivity);
         if (kQQSettingSettingActivity != null) {
             XposedHelpers.findAndHookMethod(kQQSettingSettingActivity, "doOnCreate", Bundle.class, mAddModuleEntry);
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooked QQSettingSettingActivity.doOnCreate");
         }
         Class<?> kQQSettingSettingFragment = Initiator._QQSettingSettingFragment();
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] kQQSettingSettingFragment=" + kQQSettingSettingFragment);
         if (kQQSettingSettingFragment != null) {
             Method doOnCreateView = kQQSettingSettingFragment.getDeclaredMethod("doOnCreateView",
                     LayoutInflater.class, ViewGroup.class, Bundle.class);
             XposedBridge.hookMethod(doOnCreateView, mAddModuleEntry);
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooked QQSettingSettingFragment.doOnCreateView");
         }
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] initOnce() DONE");
         return true;
     }
 
     private void injectSettingEntryForMainSettingConfigProvider() throws ReflectiveOperationException {
         // 8.9.70+
         Class<?> kMainSettingFragment = Initiator.load("com.tencent.mobileqq.setting.main.MainSettingFragment");
+        android.util.Log.i("FanqieDebug", "[SettingEntryHook] MainSettingFragment class: " + kMainSettingFragment);
         if (kMainSettingFragment != null) {
             // MainSettingConfigProvider was removed in 9.1.65.24690(9516) gray release
             Class<?> kMainSettingConfigProvider = Initiator.load("com.tencent.mobileqq.setting.main.MainSettingConfigProvider");
@@ -180,6 +195,9 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
             Class<?> kNewSettingConfigProvider = Initiator.load("com.tencent.mobileqq.setting.main.NewSettingConfigProvider");
             // 9.2.30, NewSettingConfigProvider was obfuscated to b
             Class<?> kNewSettingConfigProviderObf = Initiator.load("com.tencent.mobileqq.setting.main.b");
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] kMainSettingConfigProvider=" + kMainSettingConfigProvider
+                    + " kNewSettingConfigProvider=" + kNewSettingConfigProvider
+                    + " kNewSettingConfigProviderObf=" + kNewSettingConfigProviderObf);
             Method getItemProcessListOld = null;
             if (kMainSettingConfigProvider != null) {
                 getItemProcessListOld = Reflex.findSingleMethod(kMainSettingConfigProvider, List.class, false, Context.class);
@@ -192,7 +210,10 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
             if (kNewSettingConfigProviderObf != null) {
                 getItemProcessListNewObf = Reflex.findSingleMethod(kNewSettingConfigProviderObf, List.class, false, Context.class);
             }
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] getItemProcessList Old=" + getItemProcessListOld
+                    + " New=" + getItemProcessListNew + " NewObf=" + getItemProcessListNewObf);
             if (getItemProcessListOld == null && getItemProcessListNew == null && getItemProcessListNewObf == null) {
+                android.util.Log.e("FanqieDebug", "[SettingEntryHook] All getItemProcessList methods are null, throw!");
                 throw new IllegalStateException("getItemProcessListOld == null && getItemProcessListNew == null && getItemProcessListNewObf == null");
             }
             Class<?> kAbstractItemProcessor = null;
@@ -280,31 +301,48 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                 ctorSimpleItemProcessorArgc = i;
             }
             XC_MethodHook callback = HookUtils.afterAlways(this, 50, param -> {
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] getItemProcessList callback fired, providerClass=" + param.thisObject.getClass().getName());
                 List<Object> result = (List<Object>) param.getResult();
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] result list size=" + (result != null ? result.size() : "null"));
                 Context ctx = (Context) param.args[0];
                 Class<?> kItemProcessorGroup = result.get(0).getClass();
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] ItemProcessorGroup class=" + kItemProcessorGroup.getName());
                 Constructor<?> ctor;
                 try {
                     ctor = kItemProcessorGroup.getDeclaredConstructor(List.class, CharSequence.class, CharSequence.class);
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] found 3-arg group ctor");
                 } catch (NoSuchMethodException e) {
                     // 9.2.30
                     ctor = kItemProcessorGroup.getDeclaredConstructor(List.class, CharSequence.class, CharSequence.class,
                             int.class, load("kotlin.jvm.internal.DefaultConstructorMarker"));
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] found 5-arg group ctor (QQ 9.2.30+)");
                 }
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] calling Parasitics.injectModuleResources...");
                 Parasitics.injectModuleResources(ctx.getResources());
                 @SuppressLint("DiscouragedApi")
                 int resId = ctx.getResources().getIdentifier("qui_tuning", "drawable", ctx.getPackageName());
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] qui_tuning resId=0x" + Integer.toHexString(resId)
+                        + " (0 means not found in host, may use fallback)");
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] R.id.setting2Activity_settingEntryItem=0x"
+                        + Integer.toHexString(R.id.setting2Activity_settingEntryItem));
                 Object entryItem;
-                if (ctorSimpleItemProcessorArgc == 5) {
-                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId, null);
-                } else {
-                    entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId);
+                try {
+                    if (ctorSimpleItemProcessorArgc == 5) {
+                        entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId, null);
+                    } else {
+                        entryItem = ctorSimpleItemProcessor.newInstance(ctx, R.id.setting2Activity_settingEntryItem, "小番茄解混淆", resId);
+                    }
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] entryItem created: " + entryItem);
+                } catch (Throwable t) {
+                    android.util.Log.e("FanqieDebug", "[SettingEntryHook] entryItem creation FAILED: " + t, t);
+                    throw t;
                 }
                 Class<?> thatFunction0 = setOnClickListener.getParameterTypes()[0];
                 Object theUnit = thatFunction0.getClassLoader().loadClass("kotlin.Unit").getField("INSTANCE").get(null);
                 ClassLoader hostClassLoader = Initiator.getHostClassLoader();
                 Object func0 = Proxy.newProxyInstance(hostClassLoader, new Class<?>[]{thatFunction0}, (proxy, method, args) -> {
                     if (method.getName().equals("invoke")) {
+                        android.util.Log.i("FanqieDebug", "[SettingEntryHook] entry clicked! calling onSettingEntryClick");
                         onSettingEntryClick(ctx);
                         return theUnit;
                     }
@@ -312,6 +350,7 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                     return method.invoke(this, args);
                 });
                 setOnClickListener.invoke(entryItem, func0);
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] onClickListener set");
                 ArrayList<Object> list = new ArrayList<>(1);
                 list.add(entryItem);
                 Object group;
@@ -321,18 +360,27 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                 } else {
                     group = ctor.newInstance(list, "", "");
                 }
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] group created: " + group);
                 boolean isNew = param.thisObject.getClass().getName().contains("NewSettingConfigProvider");
                 int indexToInsert = isNew ? 2 : 1;
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] isNew=" + isNew + ", inserting at index=" + indexToInsert
+                        + " into result list size=" + result.size());
                 result.add(indexToInsert, group);
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] ENTRY INJECTED SUCCESS! result new size=" + result.size());
             });
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooking getItemProcessList methods: Old=" + (getItemProcessListOld != null)
+                    + " New=" + (getItemProcessListNew != null) + " NewObf=" + (getItemProcessListNewObf != null));
             if (getItemProcessListOld != null) {
                 XposedBridge.hookMethod(getItemProcessListOld, callback);
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooked Old (MainSettingConfigProvider)");
             }
             if (getItemProcessListNew != null) {
                 XposedBridge.hookMethod(getItemProcessListNew, callback);
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooked New (NewSettingConfigProvider)");
             }
             if (getItemProcessListNewObf != null) {
                 XposedBridge.hookMethod(getItemProcessListNewObf, callback);
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] hooked NewObf (NewSettingConfigProvider obfuscated)");
             }
         }
     }
@@ -340,6 +388,7 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
     private final XC_MethodHook mAddModuleEntry = new XC_MethodHook(51) {
         @Override
         protected void afterHookedMethod(final MethodHookParam param) throws Throwable {
+            android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry callback fired (legacy QQ < 8.9.70 path), this=" + param.thisObject.getClass().getName());
             try {
                 final Activity activity;
                 var thisObject = param.thisObject;
@@ -348,6 +397,7 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                 } else {
                     activity = (Activity) Reflex.invokeVirtual(thisObject, "getActivity");
                 }
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry activity=" + activity);
                 Resources res = activity.getResources();
                 Class<?> itemClass;
                 View itemRef = null;
@@ -367,8 +417,10 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                         }
                     }
                 }
+                android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry itemRef via FormSimpleItem field scan: " + itemRef);
                 if (itemRef == null && (itemClass = load("com/tencent/mobileqq/widget/FormCommonSingleLineItem")) != null) {
                     itemRef = (View) Reflex.getInstanceObjectOrNull(activity, "a", itemClass);
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry itemRef via FormCommonSingleLineItem: " + itemRef);
                 }
                 if (itemRef == null) {
                     Class<?> clz = load("com/tencent/mobileqq/widget/FormCommonSingleLineItem");
@@ -376,10 +428,12 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                         clz = load("com/tencent/mobileqq/widget/FormSimpleItem");
                     }
                     itemRef = (View) Reflex.getFirstNSFByType(activity, clz);
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry itemRef via getFirstNSFByType: " + itemRef);
                 }
                 View item;
                 if (itemRef == null) {
                     // we are in triassic period?
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry itemRef==null, using FormSimpleItem fallback");
                     item = (View) Reflex.newInstance(load("com/tencent/mobileqq/widget/FormSimpleItem"), activity, Context.class);
                 } else {
                     // modern age
@@ -396,6 +450,7 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                     Reflex.invokeVirtual(item, "setRightText", "[未激活]", CharSequence.class);
                 }
                 item.setOnClickListener(v -> {
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry item clicked!");
                     onSettingEntryClick(activity);
                 });
                 if (itemRef != null && !HostInfo.isQQHD()) {
@@ -434,16 +489,22 @@ public class SettingEntryHook extends BasePersistBackgroundHook {
                         }
                     } catch (NullPointerException ignored) {
                     }
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry adding item at index=" + index
+                            + " into ViewGroup childCount=" + list.getChildCount());
                     list.addView(item, index, lp);
                     fixBackgroundType(list, item, index);
+                    android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry LEGACY ENTRY INJECTED SUCCESS!");
                 } else {
                     // triassic period, we have to find the ViewGroup ourselves
                     int qqsetting2_msg_notify = res.getIdentifier("qqsetting2_msg_notify", "id", activity.getPackageName());
                     if (qqsetting2_msg_notify == 0) {
+                        android.util.Log.e("FanqieDebug", "[SettingEntryHook] mAddModuleEntry triassic: qqsetting2_msg_notify id=0, cannot inject!");
                         throw new UnsupportedOperationException("R.id.qqsetting2_msg_notify not found in triassic period");
                     } else {
                         ViewGroup vg = (ViewGroup) activity.findViewById(qqsetting2_msg_notify).getParent().getParent();
+                        android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry triassic: adding to ViewGroup " + vg);
                         vg.addView(item, 0, new ViewGroup.LayoutParams(MATCH_PARENT, /*reflp.height*/WRAP_CONTENT));
+                        android.util.Log.i("FanqieDebug", "[SettingEntryHook] mAddModuleEntry TRIASSIC ENTRY INJECTED SUCCESS!");
                     }
                 }
             } catch (Throwable e) {

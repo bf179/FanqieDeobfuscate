@@ -104,6 +104,7 @@ public class MainHook {
     }
 
     public void performHook(@NonNull Context ctx, @Nullable Object step) {
+        android.util.Log.i("FanqieDebug", "[MainHook] performHook called, ctx=" + ctx + ", step=" + step);
         SyncUtils.initBroadcast(ctx);
         injectLifecycleForProcess(ctx);
         if (HostInfo.isQQHD()) {
@@ -113,7 +114,7 @@ public class MainHook {
         SafeModeManager.getManager().setSafeModeForThisTime(safeMode);
         if (safeMode) {
             LicenseStatus.sDisableCommonHooks = true;
-            Log.i("Safe mode enabled, disable hooks");
+            android.util.Log.i("FanqieDebug", "[MainHook] Safe mode enabled, disable hooks");
         }
         // deliberately allowing DisableHotPatch and DisableQQCrashReportManager in safe mode
         HookInstaller.allowEarlyInit(DisableHotPatch.INSTANCE);
@@ -139,6 +140,7 @@ public class MainHook {
             }
             Class<?> loadData = Initiator.load("com/tencent/mobileqq/startup/step/LoadData");
             if (loadData != null) {
+                android.util.Log.i("FanqieDebug", "[MainHook] LoadData class found, hooking doStep for third-stage init");
                 Method doStep = null;
                 for (Method method : loadData.getDeclaredMethods()) {
                     if (method.getReturnType().equals(boolean.class) && method.getParameterTypes().length == 0) {
@@ -150,26 +152,60 @@ public class MainHook {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) {
                         if (third_stage_inited) {
+                            android.util.Log.i("FanqieDebug", "[MainHook] LoadData.doStep already inited, skip");
                             return;
                         }
+                        android.util.Log.i("FanqieDebug", "[MainHook] LoadData.doStep afterHookedMethod, safeMode=" + safeMode);
                         Object dir = getStartDirector(param.thisObject);
                         if (safeMode) {
-                            SettingEntryHook.INSTANCE.initialize();
+                            android.util.Log.i("FanqieDebug", "[MainHook] safeMode -> calling SettingEntryHook.INSTANCE.initialize()");
+                            try {
+                                SettingEntryHook.INSTANCE.initialize();
+                                android.util.Log.i("FanqieDebug", "[MainHook] SettingEntryHook.initialize SUCCESS (safeMode path)");
+                            } catch (Throwable t) {
+                                android.util.Log.e("FanqieDebug", "[MainHook] SettingEntryHook.initialize FAILED (safeMode): " + t, t);
+                                if (t instanceof Error) throw (Error) t;
+                                if (t instanceof RuntimeException) throw (RuntimeException) t;
+                                throw new RuntimeException(t);
+                            }
                         } else {
-                            InjectDelayableHooks.step(dir);
+                            android.util.Log.i("FanqieDebug", "[MainHook] normal mode -> calling InjectDelayableHooks.step(dir)");
+                            try {
+                                InjectDelayableHooks.step(dir);
+                                android.util.Log.i("FanqieDebug", "[MainHook] InjectDelayableHooks.step SUCCESS");
+                            } catch (Throwable t) {
+                                android.util.Log.e("FanqieDebug", "[MainHook] InjectDelayableHooks.step FAILED: " + t, t);
+                                if (t instanceof Error) throw (Error) t;
+                                if (t instanceof RuntimeException) throw (RuntimeException) t;
+                                throw new RuntimeException(t);
+                            }
                         }
                         third_stage_inited = true;
                     }
                 });
             } else {
-                Log.d("LoadData not found, running third stage hooks in background");
+                android.util.Log.i("FanqieDebug", "[MainHook] LoadData not found, running third stage hooks in background");
                 if (safeMode) {
-                    SettingEntryHook.INSTANCE.initialize();
+                    android.util.Log.i("FanqieDebug", "[MainHook] safeMode bg -> SettingEntryHook.initialize");
+                    try {
+                        SettingEntryHook.INSTANCE.initialize();
+                        android.util.Log.i("FanqieDebug", "[MainHook] SettingEntryHook.initialize SUCCESS (bg safeMode)");
+                    } catch (Throwable t) {
+                        android.util.Log.e("FanqieDebug", "[MainHook] SettingEntryHook.initialize FAILED (bg safeMode): " + t, t);
+                    }
                 } else {
-                    InjectDelayableHooks.step(null);
+                    android.util.Log.i("FanqieDebug", "[MainHook] normal mode bg -> InjectDelayableHooks.step(null)");
+                    try {
+                        InjectDelayableHooks.step(null);
+                        android.util.Log.i("FanqieDebug", "[MainHook] InjectDelayableHooks.step(null) SUCCESS");
+                    } catch (Throwable t) {
+                        android.util.Log.e("FanqieDebug", "[MainHook] InjectDelayableHooks.step(null) FAILED: " + t, t);
+                    }
                 }
             }
         } else {
+            android.util.Log.i("FanqieDebug", "[MainHook] NOT main process, skip third-stage hooks (safeMode=" + safeMode
+                    + ", eulaAccepted=" + LicenseStatus.hasUserAcceptEula() + ")");
             if (!safeMode && LicenseStatus.hasUserAcceptEula()) {
                 Object dir = getStartDirector(step);
                 InjectDelayableHooks.step(dir);
@@ -183,6 +219,7 @@ public class MainHook {
                 ExternalModuleConfigHook.INSTANCE.traceError(e);
             }
         }
+        android.util.Log.i("FanqieDebug", "[MainHook] performHook done");
     }
 
     private static boolean isForegroundStartupForMainProcess(Context ctx, Object step) {

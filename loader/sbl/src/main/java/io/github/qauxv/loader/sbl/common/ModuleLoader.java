@@ -57,7 +57,10 @@ public class ModuleLoader {
             @NonNull String selfPath,
             boolean allowDynamicLoad
     ) throws ReflectiveOperationException {
+        android.util.Log.i("FanqieDebug", "[ModuleLoader] initialize called, hostDataDir=" + hostDataDir
+                + ", selfPath=" + selfPath + ", allowDynamicLoad=" + allowDynamicLoad);
         if (sLoaded) {
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] already loaded (sLoaded=true), skip");
             return;
         }
         File targetModule = null;
@@ -77,6 +80,8 @@ public class ModuleLoader {
             // ART requires W^X since Android 14
             useDynamicLoad = true;
         }
+        android.util.Log.i("FanqieDebug", "[ModuleLoader] useDynamicLoad=" + useDynamicLoad
+                + ", targetModule=" + (targetModule != null ? targetModule.getAbsolutePath() : "null"));
         ClassLoader targetClassLoader = null;
         try {
             if (useDynamicLoad) {
@@ -91,16 +96,48 @@ public class ModuleLoader {
         if (targetClassLoader == null) {
             targetClassLoader = ModuleLoader.class.getClassLoader();
             modulePath = selfPath;
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] fallback to normal startup, classLoader=" + targetClassLoader
+                    + ", modulePath=" + modulePath);
         } else {
             modulePath = targetModule.getAbsolutePath();
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] using dynamic load, classLoader=" + targetClassLoader
+                    + ", modulePath=" + modulePath);
         }
         assert targetClassLoader != null;
         // invoke the startup routine
-        Class<?> kUnifiedEntryPoint = targetClassLoader.loadClass("io.github.qauxv.startup.UnifiedEntryPoint");
-        Method initialize = kUnifiedEntryPoint.getMethod("entry",
-                String.class, String.class, ILoaderService.class, ClassLoader.class, IHookBridge.class);
+        android.util.Log.i("FanqieDebug", "[ModuleLoader] loading class io.github.qauxv.startup.UnifiedEntryPoint ...");
+        Class<?> kUnifiedEntryPoint;
+        try {
+            kUnifiedEntryPoint = targetClassLoader.loadClass("io.github.qauxv.startup.UnifiedEntryPoint");
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] UnifiedEntryPoint loaded: " + kUnifiedEntryPoint
+                    + " (loader=" + kUnifiedEntryPoint.getClassLoader() + ")");
+        } catch (Throwable t) {
+            android.util.Log.e("FanqieDebug", "[ModuleLoader] Failed to load UnifiedEntryPoint: " + t, t);
+            throw t;
+        }
+        Method initialize;
+        try {
+            initialize = kUnifiedEntryPoint.getMethod("entry",
+                    String.class, String.class, ILoaderService.class, ClassLoader.class, IHookBridge.class);
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] entry method found: " + initialize);
+        } catch (Throwable t) {
+            android.util.Log.e("FanqieDebug", "[ModuleLoader] Failed to find entry method: " + t, t);
+            throw t;
+        }
         sLoaded = true;
-        initialize.invoke(null, modulePath, hostDataDir, loaderService, hostClassLoader, hookBridge);
+        try {
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] invoking UnifiedEntryPoint.entry(...) ...");
+            initialize.invoke(null, modulePath, hostDataDir, loaderService, hostClassLoader, hookBridge);
+            android.util.Log.i("FanqieDebug", "[ModuleLoader] UnifiedEntryPoint.entry SUCCESS");
+        } catch (Throwable t) {
+            android.util.Log.e("FanqieDebug", "[ModuleLoader] UnifiedEntryPoint.entry FAILED: " + t, t);
+            Throwable cause = t.getCause() != null ? t.getCause() : t;
+            android.util.Log.e("FanqieDebug", "[ModuleLoader] root cause: " + cause, cause);
+            if (t instanceof ReflectiveOperationException) {
+                throw t;
+            }
+            throw new ReflectiveOperationException(t);
+        }
     }
 
     public static List<Throwable> getInitErrors() {

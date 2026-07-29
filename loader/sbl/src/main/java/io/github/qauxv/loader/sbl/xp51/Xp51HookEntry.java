@@ -28,24 +28,46 @@ public class Xp51HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteI
     @Keep
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws ReflectiveOperationException {
+        android.util.Log.i("FanqieDebug", "[Xp51HookEntry] handleLoadPackage called, packageName=" + lpparam.packageName
+                + ", processName=" + (lpparam.processName != null ? lpparam.processName : "null"));
         sLoadPackageParam = lpparam;
         // check LSPosed dex-obfuscation
         Class<?> kXposedBridge = XposedBridge.class;
+        android.util.Log.i("FanqieDebug", "[Xp51HookEntry] XposedBridge class loader: " + kXposedBridge.getClassLoader()
+                + ", PACKAGE_NAME_SELF=" + WellKnownConstants.PACKAGE_NAME_SELF);
         switch (lpparam.packageName) {
             case WellKnownConstants.PACKAGE_NAME_SELF: {
-                Xp51HookStatusInit.init(lpparam.classLoader);
+                android.util.Log.i("FanqieDebug", "[Xp51HookEntry] matched SELF package, calling Xp51HookStatusInit.init");
+                try {
+                    Xp51HookStatusInit.init(lpparam.classLoader);
+                    android.util.Log.i("FanqieDebug", "[Xp51HookEntry] Xp51HookStatusInit.init SUCCESS");
+                } catch (Throwable t) {
+                    android.util.Log.e("FanqieDebug", "[Xp51HookEntry] Xp51HookStatusInit.init FAILED: " + t, t);
+                    throw t;
+                }
                 break;
             }
             case WellKnownConstants.PACKAGE_NAME_TIM:
             case WellKnownConstants.PACKAGE_NAME_QQ:
             case WellKnownConstants.PACKAGE_NAME_QQ_HD:
             case WellKnownConstants.PACKAGE_NAME_QQ_LITE: {
+                android.util.Log.i("FanqieDebug", "[Xp51HookEntry] matched HOST package=" + lpparam.packageName
+                        + ", modulePath=" + (sModulePath != null ? sModulePath : "null")
+                        + ", appInfo.dataDir=" + lpparam.appInfo.dataDir);
                 if (sInitZygoteStartupParam == null) {
+                    android.util.Log.e("FanqieDebug", "[Xp51HookEntry] sInitZygoteStartupParam is null, initZygote may not have been called!");
                     throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
                 }
                 sCurrentPackageName = lpparam.packageName;
-                ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
-                        Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath(), true);
+                try {
+                    android.util.Log.i("FanqieDebug", "[Xp51HookEntry] calling ModuleLoader.initialize...");
+                    ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
+                            Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath(), true);
+                    android.util.Log.i("FanqieDebug", "[Xp51HookEntry] ModuleLoader.initialize SUCCESS");
+                } catch (Throwable t) {
+                    android.util.Log.e("FanqieDebug", "[Xp51HookEntry] ModuleLoader.initialize FAILED: " + t, t);
+                    throw t;
+                }
                 break;
             }
             case WellKnownConstants.PACKAGE_NAME_QQ_INTERNATIONAL: {
@@ -53,6 +75,7 @@ public class Xp51HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteI
                 break;
             }
             default:
+                android.util.Log.i("FanqieDebug", "[Xp51HookEntry] packageName not in target list, skip: " + lpparam.packageName);
                 break;
         }
     }

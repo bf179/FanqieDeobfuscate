@@ -324,13 +324,18 @@ public class NativeLoader {
     }
 
     public static void loadPrimaryNativeLibrary(@NonNull File dataDir, @Nullable ApplicationInfo hostAppInfo) {
+        android.util.Log.i("FanqieDebug", "[NativeLoader] loadPrimaryNativeLibrary called, inHostProcess=" + StartupInfo.isInHostProcess()
+                + ", sPrimaryNativeLibraryAttached=" + sPrimaryNativeLibraryAttached);
         if (sPrimaryNativeLibraryAttached) {
+            android.util.Log.i("FanqieDebug", "[NativeLoader] already attached, skip");
             return;
         }
         if (StartupInfo.isInHostProcess()) {
+            android.util.Log.i("FanqieDebug", "[NativeLoader] calling loadPrimaryNativeLibraryInHost");
             loadPrimaryNativeLibraryInHost(dataDir, hostAppInfo);
         } else {
             // in my own app_process, it's so easy
+            android.util.Log.i("FanqieDebug", "[NativeLoader] self process, System.loadLibrary(\"fanqie-core0\")");
             System.loadLibrary("fanqie-core0");
             sPrimaryNativeLibraryLoaded = true;
             try {
@@ -338,11 +343,15 @@ public class NativeLoader {
                         .getMethod("invokeAttachClassLoader", ClassLoader.class)
                         .invoke(null, NativeLoader.class.getClassLoader());
                 sPrimaryNativeLibraryHandle = nativeGetPrimaryNativeLibraryHandle();
+                android.util.Log.i("FanqieDebug", "[NativeLoader] native handle=0x" + Long.toHexString(sPrimaryNativeLibraryHandle));
                 if (sPrimaryNativeLibraryHandle == 0) {
+                    android.util.Log.e("FanqieDebug", "[NativeLoader] nativeGetPrimaryNativeLibraryHandle returned 0!");
                     throw new AssertionError("nativeGetPrimaryNativeLibraryHandle returned 0");
                 }
                 sPrimaryNativeLibraryAttached = true;
+                android.util.Log.i("FanqieDebug", "[NativeLoader] self-process native library attach SUCCESS");
             } catch (ReflectiveOperationException e) {
+                android.util.Log.e("FanqieDebug", "[NativeLoader] self-process attach FAILED: " + e, e);
                 // should not happen
                 throw IoUtils.unsafeThrowForIteCause(e);
             }
@@ -416,7 +425,10 @@ public class NativeLoader {
         int runtimeIsa = getCurrentRuntimeIsa();
         // do we support the current runtime ISA?
         Set<Integer> supportedIsas = getModuleSupportedIsas();
+        android.util.Log.i("FanqieDebug", "[NativeLoader] loadPrimaryNativeLibraryInHost: runtimeIsa=" + getIsaName(runtimeIsa)
+                + ", supportedIsas=" + isaSetToString(supportedIsas));
         if (!supportedIsas.contains(runtimeIsa)) {
+            android.util.Log.e("FanqieDebug", "[NativeLoader] unsupported runtime ISA!");
             throw new IllegalStateException("Unsupported runtime ISA: " + getIsaName(runtimeIsa)
                     + ", supported ISAs: " + isaSetToString(supportedIsas));
         }
@@ -425,9 +437,11 @@ public class NativeLoader {
         if (hostAppInfo != null) {
             int appIsa = getApplicationIsa(hostAppInfo);
             useIsolatedSoLoader = appIsa != runtimeIsa;
+            android.util.Log.i("FanqieDebug", "[NativeLoader] host appIsa=" + getIsaName(appIsa) + ", useIsolatedSoLoader=" + useIsolatedSoLoader);
         } else {
             // we don't know the host app's ABI, so had better use isolated SoLoader
             useIsolatedSoLoader = true;
+            android.util.Log.i("FanqieDebug", "[NativeLoader] hostAppInfo null, useIsolatedSoLoader=true");
         }
         ClassLoader loader = useIsolatedSoLoader ? getIsolatedPrimaryNativeLibraryNativeLoader() : NativeLoader.class.getClassLoader();
         assert loader != null;
@@ -438,48 +452,58 @@ public class NativeLoader {
             invokeLoad = invoker.getDeclaredMethod("invokeLoadLibrary", String.class);
             invokeAttach = invoker.getDeclaredMethod("invokeAttachClassLoader", ClassLoader.class);
         } catch (ReflectiveOperationException e) {
+            android.util.Log.e("FanqieDebug", "[NativeLoader] load LoadLibraryInvoker FAILED: " + e, e);
             // should not happen
             throw IoUtils.unsafeThrowForIteCause(e);
         }
         String apkPath = StartupInfo.getModulePath();
         String soname = "libfanqie-core0.so";
+        android.util.Log.i("FanqieDebug", "[NativeLoader] apkPath=" + apkPath + ", soname=" + soname);
         if (!sPrimaryNativeLibraryLoaded) {
             // case 1: direct load without extracting, since the native library is expected to be 4K aligned without compression
             try {
                 String path = apkPath + "!/lib/" + getNativeLibraryDirName(runtimeIsa) + "/" + soname;
+                android.util.Log.i("FanqieDebug", "[NativeLoader] case1 direct load path=" + path);
                 invokeLoad.invoke(null, path);
                 if (sPrimaryNativeLibraryNativeLoader == null) {
                     sPrimaryNativeLibraryNativeLoader = loader;
                 }
                 sPrimaryNativeLibraryLoaded = true;
+                android.util.Log.i("FanqieDebug", "[NativeLoader] case1 direct load SUCCESS, sPrimaryNativeLibraryLoaded=true");
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getTargetException();
-                Log.w("Failed to load native library directly", cause);
+                android.util.Log.w("FanqieDebug", "[NativeLoader] case1 direct load FAILED: " + cause, cause);
                 if (cause instanceof UnsatisfiedLinkError) {
                     throwIfJniError((UnsatisfiedLinkError) cause);
                 }
             } catch (IllegalAccessException e) {
+                android.util.Log.e("FanqieDebug", "[NativeLoader] case1 IllegalAccessError: " + e, e);
                 // should not happen
                 throw IoUtils.unsafeThrow(e);
             }
         }
         if (!sPrimaryNativeLibraryLoaded) {
             // case 2: extract and load if direct mmap failed
+            android.util.Log.i("FanqieDebug", "[NativeLoader] case2 extract and load (case1 failed)");
             File filesDir = new File(dataDir, "files");
             IoUtils.mkdirsOrThrow(filesDir);
             File soFile = extractNativeLibrary(filesDir, soname, getNativeLibraryDirName(runtimeIsa));
+            android.util.Log.i("FanqieDebug", "[NativeLoader] extracted soFile=" + soFile.getAbsolutePath()
+                    + ", exists=" + soFile.exists() + ", len=" + soFile.length());
             try {
                 invokeLoad.invoke(null, soFile.getAbsolutePath());
                 if (sPrimaryNativeLibraryNativeLoader == null) {
                     sPrimaryNativeLibraryNativeLoader = loader;
                 }
                 sPrimaryNativeLibraryLoaded = true;
+                android.util.Log.i("FanqieDebug", "[NativeLoader] case2 extract+load SUCCESS");
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getTargetException();
-                Log.w("Failed to load native library after extraction", cause);
+                android.util.Log.e("FanqieDebug", "[NativeLoader] case2 extract+load FAILED (FATAL): " + cause, cause);
                 // always treat as fatal error
                 throw IoUtils.unsafeThrow(cause);
             } catch (IllegalAccessException e) {
+                android.util.Log.e("FanqieDebug", "[NativeLoader] case2 IllegalAccessError: " + e, e);
                 // should not happen
                 throw IoUtils.unsafeThrow(e);
             }
@@ -487,19 +511,27 @@ public class NativeLoader {
         // attach the class loader
         ClassLoader self = NativeLoader.class.getClassLoader();
         assert self != null;
+        android.util.Log.i("FanqieDebug", "[NativeLoader] attaching class loader, invokeAttachClassLoader...");
         try {
             invokeAttach.invoke(null, self);
             sPrimaryNativeLibraryAttached = true;
             sPrimaryNativeLibraryHandle = nativeGetPrimaryNativeLibraryHandle();
+            android.util.Log.i("FanqieDebug", "[NativeLoader] handle=0x" + Long.toHexString(sPrimaryNativeLibraryHandle));
             if (sPrimaryNativeLibraryHandle == 0) {
-                throw new AssertionError("nativeGetPrimaryNativeLibraryHandle returned 0");
+                // Possible: linker returned preloaded official lib (same soname). Log details.
+                android.util.Log.e("FanqieDebug", "[NativeLoader] nativeGetPrimaryNativeLibraryHandle=0! "
+                        + "Possible soname collision: official lib may already be loaded with same DT_SONAME! "
+                        + "Check adb shell cat /proc/" + Process.myPid() + "/maps | grep fanqie/qauxv");
+                throw new AssertionError("nativeGetPrimaryNativeLibraryHandle returned 0 (possible soname collision with official QAuxiliary)");
             }
+            android.util.Log.i("FanqieDebug", "[NativeLoader] loadPrimaryNativeLibraryInHost SUCCESS");
         } catch (InvocationTargetException e) {
             Throwable cause = e.getTargetException();
-            Log.w("Failed to attach primary native library", cause);
+            android.util.Log.e("FanqieDebug", "[NativeLoader] attach FAILED (FATAL): " + cause, cause);
             // always treat as fatal error
             throw IoUtils.unsafeThrow(cause);
         } catch (IllegalAccessException e) {
+            android.util.Log.e("FanqieDebug", "[NativeLoader] attach IllegalAccessError: " + e, e);
             // should not happen
             throw IoUtils.unsafeThrow(e);
         }
