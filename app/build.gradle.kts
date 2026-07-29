@@ -102,7 +102,7 @@ android {
     namespace = "io.github.qauxv"
     ndkVersion = Version.getNdkVersion(rootProject)
     defaultConfig {
-        applicationId = "io.github.qauxv"
+        applicationId = "io.github.qauxv.fanqiedebf"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BUILD_UUID", "\"$currentBuildUuid\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")

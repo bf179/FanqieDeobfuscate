@@ -85,3 +85,11 @@ jobs:
           ccache -s
         env:
           QAUXV_OVERRIDE_CMAKE_VERSION: "3.31.0"
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v5
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 14

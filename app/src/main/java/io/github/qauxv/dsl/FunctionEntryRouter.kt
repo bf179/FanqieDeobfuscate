@@ -40,6 +40,16 @@ object FunctionEntryRouter {
     }
 
     /**
+     * UI 项白名单 (按 itemAgentProviderUniqueIdentifier 过滤)。
+     *
+     * 当前构建为独立拆分版本, 仅暴露 [cc.ioctl.hook.msg.FanqieDeobfuscateHook] 相关的设置项,
+     * 其它官方模块的 UI 项不显示。
+     */
+    private val whitelistedUiItemProviders: Set<String> = setOf(
+        "cc.ioctl.hook.msg.FanqieDeobfuscateHook"
+    )
+
+    /**
      * The full UI-DSL-function tree
      */
     @JvmStatic
@@ -66,7 +76,11 @@ object FunctionEntryRouter {
 
     @JvmStatic
     fun queryAnnotatedUiItemAgentEntries(): Array<IUiItemAgentProvider> {
-        return mAnnotatedUiItemAgentDescriptionList
+        // 仅返回白名单中的 UI 项, 拆分版设置页只显示小番茄解混淆相关功能。
+        val all = mAnnotatedUiItemAgentDescriptionList
+        if (whitelistedUiItemProviders.isEmpty()) return all
+        return all.filter { it.itemAgentProviderUniqueIdentifier in whitelistedUiItemProviders }
+            .toTypedArray()
     }
 
     @JvmStatic

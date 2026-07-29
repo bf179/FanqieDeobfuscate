@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">QAuxiliary</string>
-    <string name="xposeddescription">QQ辅助性功能增强 免费软件 请勿盗卖或用于非法用途 by cinit@github</string>
+    <string name="app_name">小番茄解混淆</string>
+    <string name="xposeddescription">小番茄图片解混淆模块 by fanqiedebf</string>
     <string name="res_inject_success">Resources injection success</string>
     <string name="xposed_not_activated">Xposed 未激活</string>
     <string name="xposed_activated">Xposed 已激活</string>

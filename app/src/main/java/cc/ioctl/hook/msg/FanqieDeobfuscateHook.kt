@@ -21,6 +21,7 @@
 
 package cc.ioctl.hook.msg
 
+import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
@@ -28,13 +29,17 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import cc.hicore.QApp.QAppUtils
 import com.xiaoniu.dispatcher.OnMenuBuilder
 import com.xiaoniu.util.ContextUtils
 import io.github.qauxv.R
+import io.github.qauxv.base.IEntityAgent
 import io.github.qauxv.base.annotation.FunctionHookEntry
 import io.github.qauxv.base.annotation.UiItemAgentEntry
 import io.github.qauxv.dsl.FunctionEntryRouter
@@ -46,6 +51,7 @@ import io.github.qauxv.util.SyncUtils
 import io.github.qauxv.util.Toasts
 import io.github.qauxv.util.dexkit.AbstractQQCustomMenuItem
 import io.github.qauxv.util.xpcompat.XC_MethodHook
+import me.ketal.data.ConfigData
 import xyz.nextalone.util.invoke
 import java.io.File
 import java.io.FileOutputStream
@@ -56,7 +62,9 @@ import kotlin.concurrent.thread
  * 长按图片消息对图片进行"小番茄"解混淆。
  *
  * 小番茄图片混淆基于 Gilbert(广义 Hilbert)空间填充曲线对像素位置进行置换,
- * 并使用黄金比例偏移 offset = round((sqrt(5)-1)/2 * W * H) 做循环移位。
+ * 并使用黄金比例偏移 offset = round(key * W * H) 做循环移位。key 默认为黄金比例
+ * 共轭 (sqrt(5)-1)/2 ≈ 0.618, 也可在设置页自定义 (范围 (0, 1.618])。
+ *
  * 混淆: dst[curve[(i+offset)%n]] = src[curve[i]]; 解混淆为其逆运算: dst[curve[i]] = src[curve[(i+offset)%n]]。
  *
  * 功能入口与配置位置参考 [PicMd5Hook]。
@@ -68,21 +76,46 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
 ), OnMenuBuilder {
 
     override val name = "小番茄解混淆"
-    override val description = "长按图片消息点击\"小番茄解混淆\", 对图片进行小番茄(Gilbert 曲线)解混淆并保存到相册"
+    override val description = "长按图片消息点击\"小番茄解混淆\", 对图片进行小番茄(Gilbert 曲线)解混淆并保存到相册。点击\"解混淆 Key\" 可自定义偏移系数。"
     override val uiItemLocation = FunctionEntryRouter.Locations.Auxiliary.MESSAGE_CATEGORY
     override val isAvailable = QAppUtils.isQQnt()
 
     /** 与网页版工具一致, 限制约 800 万像素以避免内存溢出。 */
     private const val MAX_PIXELS = 8_000_000
 
-    /** 黄金比例共轭 (sqrt(5)-1)/2, 用作沿曲线的固定偏移系数。 */
-    private val PHI: Double = (Math.sqrt(5.0) - 1.0) / 2.0
+    /** 黄金比例共轭 (sqrt(5)-1)/2, 用作沿曲线的默认偏移系数。 */
+    val DEFAULT_KEY: Double = (Math.sqrt(5.0) - 1.0) / 2.0
+
+    private val keyConfig = ConfigData<Double>("fanqie_deobf_key")
+
+    val currentKey: Double
+        get() {
+            val v: Double? = keyConfig.getValue()
+            return if (v == null || v <= 0.0 || v > 1.618) DEFAULT_KEY else v
+        }
 
     override fun initOnce(): Boolean = true
 
     override val targetComponentTypes = arrayOf(
         "com.tencent.mobileqq.aio.msglist.holder.component.pic.AIOPicContentComponent"
     )
+
+    override val uiItemAgent: io.github.qauxv.base.IUiItemAgent
+        get() = keyConfigItemAgent
+
+    private val keyConfigItemAgent: io.github.qauxv.base.IUiItemAgent = object : io.github.qauxv.base.IUiItemAgent {
+        override val titleProvider: (IEntityAgent) -> String = { "解混淆 Key (当前 ${"%.4f".format(currentKey)})" }
+        override val summaryProvider: ((IEntityAgent, Context) -> CharSequence?) = { _, _ ->
+            "默认 ${"%.4f".format(DEFAULT_KEY)} (黄金比例), 范围 (0, 1.618]"
+        }
+        override val valueState: kotlinx.coroutines.flow.StateFlow<String?>? = null
+        override val validator: ((io.github.qauxv.base.IUiItemAgent) -> Boolean) = { _ -> true }
+        override val switchProvider: io.github.qauxv.base.ISwitchCellAgent? = null
+        override val onClickListener: ((IEntityAgent, Activity, View) -> Unit) = { _, activity, _ ->
+            showKeyConfigDialog(activity)
+        }
+        override val extraSearchKeywordProvider: ((IEntityAgent, Context) -> Array<String>?)? = null
+    }
 
     override fun onGetMenuNt(msg: Any, componentType: String, param: XC_MethodHook.MethodHookParam) {
         if (!isEnabled) return
@@ -119,7 +152,45 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
         return clazz.newInstance().invoke("getLocalPath", message, msgClass) as String
     }
 
-    // ---------------- 小番茄 (Gilbert 曲线 + 黄金比例偏移) 解混淆 ----------------
+    // ---------------- 设置页 Key 配置弹窗 ----------------
+
+    private fun showKeyConfigDialog(activity: Activity) {
+        val ctx = CommonContextWrapper.createAppCompatContext(activity)
+        val edit = EditText(ctx).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setText("%.6f".format(currentKey))
+            setSelection(text.length)
+        }
+        val layout = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            val pad = (16 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad, pad, 0)
+            addView(edit)
+        }
+        AlertDialog.Builder(ctx)
+            .setTitle("设置解混淆 Key")
+            .setMessage("范围 (0, 1.618], 默认 ${"%.4f".format(DEFAULT_KEY)} (黄金比例共轭)")
+            .setView(layout)
+            .setPositiveButton("保存") { _, _ ->
+                val raw = edit.text.toString().trim()
+                val v = raw.toDoubleOrNull()
+                if (v == null || v <= 0.0 || v > 1.618) {
+                    Toasts.error(ctx, "请输入 (0, 1.618] 范围内的数字")
+                    return@setPositiveButton
+                }
+                keyConfig.setValue(v)
+                Toasts.success(ctx, "已保存: ${"%.4f".format(v)}")
+            }
+            .setNeutralButton("恢复默认") { _, _ ->
+                keyConfig.remove()
+                Toasts.success(ctx, "已恢复默认 ${"%.4f".format(DEFAULT_KEY)}")
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    // ---------------- 小番茄 (Gilbert 曲线 + 自定义 key 偏移) 解混淆 ----------------
 
     private fun deobfuscate(file: File): Bitmap {
         val options = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
@@ -134,7 +205,8 @@ object FanqieDeobfuscateHook : CommonSwitchFunctionHook(
             val pixels = IntArray(n)
             src.getPixels(pixels, 0, w, 0, 0, w, h)
             val curve = gilbertCurve(w, h) // 每个元素为像素索引 x + y * w
-            val offset = Math.round(PHI * n).toInt()
+            val key = currentKey
+            val offset = Math.round(key * n).toInt()
             val out = IntArray(n)
             for (i in 0 until n) {
                 // 解混淆: dst[curve[i]] = src[curve[(i + offset) % n]]
